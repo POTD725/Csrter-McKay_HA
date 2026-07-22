@@ -11,18 +11,43 @@ This repository contains the public, secret-free source for the CARTER primary a
 - **Laptop display**: Atlantis Home Assistant information-screen kiosk
 - **Roku TVs**: Atlantis information channel with a replaceable local video loop
 
+## Confirmed network baseline
+
+The active home network is the eero LAN, not the retired upstream `192.168.12.x` network.
+
+| Item | Value |
+|---|---:|
+| LAN | `192.168.4.0/22` |
+| Gateway and DNS | `192.168.4.1` |
+| Safe reservation range | `192.168.4.2` through `192.168.6.222` |
+| CARTER Proxmox | `192.168.4.121` |
+| Proxmox web interface | `https://192.168.4.121:8006` |
+
+CARTER's `192.168.4.121` address is currently the known address and must be reserved in eero before it is treated as permanent. Home Assistant and MG PBX require their own separate addresses. See `docs/NETWORK-PLAN.md`.
+
 ## Start here
 
-1. Download or clone this repository on a Windows computer.
-2. Copy `config/site.example.conf` to `config/site.conf` and fill in the network values.
-3. Copy `config/private-info.example.ini` to a private location outside this repository and fill it in only when required.
-4. Read `docs/WALKTHROUGH.md` from top to bottom.
-5. Run `scripts/Build-Private-Deployment.ps1` to create the private local deployment bundle.
-6. Apply `scripts/patch-proxmox-kiosk.sh` only after CARTER Proxmox, Home Assistant, and the PBX VM are stable.
+For a complete rebuild, begin with:
+
+```text
+docs\USB-SETUP-FROM-SCRATCH.md
+```
+
+Then:
+
+1. Prepare and verify the Atlantis installation USB.
+2. Download or clone this repository on the Windows preparation computer.
+3. Copy `config/site.example.conf` to `config/site.conf` and fill in the remaining values.
+4. Copy `config/private-info.example.ini` to a private location outside this repository.
+5. Read `docs/WALKTHROUGH.md` from top to bottom.
+6. Run `scripts/Build-Private-Deployment.ps1` to create the private local deployment bundle.
+7. Apply `scripts/patch-proxmox-kiosk.sh` only after CARTER Proxmox, Home Assistant, and the PBX VM are stable.
+
+Do not enter any retired `192.168.12.x` address into the new deployment.
 
 ## MG PBX Atlantis command interface
 
-The repository now includes a secret-free, original Atlantis-inspired theme for the Windows MG PBX dashboard:
+The repository includes a secret-free, original Atlantis-inspired theme for the Windows MG PBX dashboard:
 
 ```text
 MG-PBX-Atlantis-Theme\Install-Atlantis-Theme.bat
@@ -41,24 +66,27 @@ This repository is public. Never upload:
 - SIP, Twilio, No-IP, PBX, or Home Assistant credentials
 - Private certificates or SSH keys
 - PBX database exports containing passwords
+- Completed private worksheets or generated deployment bundles
 
-The included `.gitignore` blocks the standard private locations, but it is still your responsibility to review every commit.
+The included `.gitignore` blocks the standard private locations, but every commit still needs review.
 
 ## Important limitation
 
-The repository stores scripts, templates, themes, and documentation. Licensed operating-system media and private backups are supplied locally when the private deployment bundle is built. The generated private bundle is not intended for GitHub.
+The repository stores scripts, templates, themes, and documentation. Licensed operating-system media and private backups are supplied locally when the private deployment bundle or USB is built. Generated private bundles are not intended for GitHub.
 
 ## Current stage
 
 The maintained repository provides:
 
-- safe configuration templates
+- corrected eero network templates and validation
+- a start-from-scratch USB preparation guide
+- a current network plan
 - Proxmox laptop kiosk patch and rollback scripts
 - Windows PBX preparation script
 - MG PBX Atlantis command-interface theme and rollback tool
 - application and package manifests
 - private bundle builder
 - Roku information channel source
-- simple installation walkthrough
+- end-to-end installation walkthrough
 
-The older generated ZIP packages can be kept offline as migration references, but the source files in this repository should become the maintained version going forward.
+The older generated ZIP packages can be kept offline as migration references, but the source files in this repository are the maintained version going forward.
