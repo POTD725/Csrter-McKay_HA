@@ -65,6 +65,7 @@ foreach ($folder in $folders) {
 Copy-Item (Join-Path $repoRoot 'scripts\*') (Join-Path $bundleRoot 'Scripts') -Recurse -Force
 Copy-Item (Join-Path $repoRoot 'docs\*') (Join-Path $bundleRoot 'Docs') -Recurse -Force
 Copy-Item (Join-Path $repoRoot 'manifests') $bundleRoot -Recurse -Force
+Copy-Item (Join-Path $repoRoot 'MG-PBX-Atlantis-Theme') $bundleRoot -Recurse -Force
 Copy-Item (Join-Path $repoRoot 'README.md') $bundleRoot -Force
 
 $siteTemplate = Get-Content (Join-Path $repoRoot 'config\site.example.conf') -Raw
@@ -113,6 +114,7 @@ Windows ISO: $windowsIso
 VirtIO ISO: $virtioIso
 Home Assistant backup: $haBackup
 PBX export: $pbxExport
+MG PBX theme: MG-PBX-Atlantis-Theme\Install-Atlantis-Theme.bat
 
 Open Docs\WALKTHROUGH.md and complete the phases in order.
 Keep this entire bundle private.
