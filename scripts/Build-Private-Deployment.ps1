@@ -14,6 +14,35 @@ function Read-Required([string]$Prompt) {
     return $value.Trim()
 }
 
+function Read-WithDefault([string]$Prompt, [string]$DefaultValue) {
+    $value = Read-Host "$Prompt [$DefaultValue]"
+    if ([string]::IsNullOrWhiteSpace($value)) { return $DefaultValue }
+    return $value.Trim()
+}
+
+function Assert-IPv4([string]$Name, [string]$Value) {
+    $parsed = $null
+    if (-not [System.Net.IPAddress]::TryParse($Value, [ref]$parsed) -or
+        $parsed.AddressFamily -ne [System.Net.Sockets.AddressFamily]::InterNetwork) {
+        throw "$Name is not a valid IPv4 address: $Value"
+    }
+}
+
+function Convert-IPv4ToUInt32([string]$Address) {
+    $bytes = ([System.Net.IPAddress]::Parse($Address)).GetAddressBytes()
+    [Array]::Reverse($bytes)
+    return [BitConverter]::ToUInt32($bytes, 0)
+}
+
+function Assert-InRange([string]$Name, [string]$Value, [string]$First, [string]$Last) {
+    $number = Convert-IPv4ToUInt32 $Value
+    $firstNumber = Convert-IPv4ToUInt32 $First
+    $lastNumber = Convert-IPv4ToUInt32 $Last
+    if ($number -lt $firstNumber -or $number -gt $lastNumber) {
+        throw "$Name ($Value) is outside the safe eero reservation range $First through $Last."
+    }
+}
+
 function Copy-OptionalFile([string]$Prompt, [string]$DestinationFolder) {
     $path = Read-Host "$Prompt (leave blank to add later)"
     if ([string]::IsNullOrWhiteSpace($path)) { return $null }
@@ -39,18 +68,50 @@ Write-Host '============================================================' -Foreg
 Write-Host '  CARTER / McKAY PRIVATE DEPLOYMENT BUILDER' -ForegroundColor Cyan
 Write-Host '============================================================' -ForegroundColor Cyan
 Write-Host 'This creates a private local bundle. Do not upload its output to GitHub.' -ForegroundColor Yellow
+Write-Host 'Confirmed eero baseline: 192.168.4.0/22, gateway 192.168.4.1.'
+Write-Host 'The retired 192.168.12.x addresses are not valid for this deployment.' -ForegroundColor Yellow
 Write-Host ''
 
-$carterIp = Read-Required 'CARTER Proxmox host IP'
+$lanCidr = Read-WithDefault 'LAN CIDR' '192.168.4.0/22'
+$gatewayIp = Read-WithDefault 'eero gateway IP' '192.168.4.1'
+$dnsIp = Read-WithDefault 'DNS IP' '192.168.4.1'
+$reservationFirst = Read-WithDefault 'First safe eero reservation address' '192.168.4.2'
+$reservationLast = Read-WithDefault 'Last eero reservation address' '192.168.6.222'
+$carterIp = Read-WithDefault 'CARTER Proxmox host IP' '192.168.4.121'
 $mckayIp = Read-Required 'McKAY Proxmox host IP'
 $haIp = Read-Required 'Shared Home Assistant service IP'
 $pbxIp = Read-Required 'Shared MG PBX service IP'
-$reservationFirst = Read-Required 'Router reservation block first address'
-$reservationLast = Read-Required 'Router reservation block last address'
 $carterDiskSerial = Read-Required 'CARTER target disk serial'
 $mckayDiskSerial = Read-Required 'McKAY target disk serial'
 $dashboardPath = Read-Host 'Home Assistant dashboard path [atlantis-information/0]'
 if ([string]::IsNullOrWhiteSpace($dashboardPath)) { $dashboardPath = 'atlantis-information/0' }
+
+foreach ($entry in @{
+    'Gateway IP' = $gatewayIp
+    'DNS IP' = $dnsIp
+    'Reservation first' = $reservationFirst
+    'Reservation last' = $reservationLast
+    'CARTER IP' = $carterIp
+    'McKAY IP' = $mckayIp
+    'Home Assistant IP' = $haIp
+    'MG PBX IP' = $pbxIp
+}.GetEnumerator()) {
+    Assert-IPv4 $entry.Key $entry.Value
+}
+
+if ($gatewayIp -ne '192.168.4.1') {
+    Write-Warning "The gateway differs from the confirmed eero gateway 192.168.4.1: $gatewayIp"
+}
+
+$serviceAddresses = @($carterIp, $mckayIp, $haIp, $pbxIp)
+if (($serviceAddresses | Select-Object -Unique).Count -ne $serviceAddresses.Count) {
+    throw 'CARTER, McKAY, Home Assistant, and MG PBX must each have a different address.'
+}
+
+Assert-InRange 'CARTER IP' $carterIp $reservationFirst $reservationLast
+Assert-InRange 'McKAY IP' $mckayIp $reservationFirst $reservationLast
+Assert-InRange 'Home Assistant IP' $haIp $reservationFirst $reservationLast
+Assert-InRange 'MG PBX IP' $pbxIp $reservationFirst $reservationLast
 
 New-Item -ItemType Directory -Force -Path $bundleRoot | Out-Null
 $folders = @(
@@ -70,14 +131,18 @@ Copy-Item (Join-Path $repoRoot 'README.md') $bundleRoot -Force
 
 $siteTemplate = Get-Content (Join-Path $repoRoot 'config\site.example.conf') -Raw
 $site = $siteTemplate `
-    -replace 'CARTER_HOST_IP=ENTER_HERE', "CARTER_HOST_IP=$carterIp" `
-    -replace 'MCKAY_HOST_IP=ENTER_HERE', "MCKAY_HOST_IP=$mckayIp" `
-    -replace 'HOME_ASSISTANT_IP=ENTER_HERE', "HOME_ASSISTANT_IP=$haIp" `
-    -replace 'PBX_IP=ENTER_HERE', "PBX_IP=$pbxIp" `
-    -replace 'ROUTER_RESERVATION_FIRST=ENTER_HERE', "ROUTER_RESERVATION_FIRST=$reservationFirst" `
-    -replace 'ROUTER_RESERVATION_LAST=ENTER_HERE', "ROUTER_RESERVATION_LAST=$reservationLast" `
-    -replace 'TARGET_DISK_FILTER_VALUE=ENTER_HERE', "TARGET_DISK_FILTER_VALUE=$carterDiskSerial" `
-    -replace 'http://ENTER_HOME_ASSISTANT_IP:8123/ENTER_DASHBOARD_PATH', "http://${haIp}:8123/$dashboardPath"
+    -replace '(?m)^LAN_CIDR=.*$', "LAN_CIDR=$lanCidr" `
+    -replace '(?m)^GATEWAY_IP=.*$', "GATEWAY_IP=$gatewayIp" `
+    -replace '(?m)^DNS_IP=.*$', "DNS_IP=$dnsIp" `
+    -replace '(?m)^CARTER_HOST_IP=.*$', "CARTER_HOST_IP=$carterIp" `
+    -replace '(?m)^CARTER_HOST_IP_STATUS=.*$', 'CARTER_HOST_IP_STATUS=RESERVED' `
+    -replace '(?m)^MCKAY_HOST_IP=.*$', "MCKAY_HOST_IP=$mckayIp" `
+    -replace '(?m)^HOME_ASSISTANT_IP=.*$', "HOME_ASSISTANT_IP=$haIp" `
+    -replace '(?m)^PBX_IP=.*$', "PBX_IP=$pbxIp" `
+    -replace '(?m)^ROUTER_RESERVATION_FIRST=.*$', "ROUTER_RESERVATION_FIRST=$reservationFirst" `
+    -replace '(?m)^ROUTER_RESERVATION_LAST=.*$', "ROUTER_RESERVATION_LAST=$reservationLast" `
+    -replace '(?m)^TARGET_DISK_FILTER_VALUE=.*$', "TARGET_DISK_FILTER_VALUE=$carterDiskSerial" `
+    -replace '(?m)^ATLANTIS_KIOSK_URL=.*$', "ATLANTIS_KIOSK_URL=http://${haIp}:8123/$dashboardPath"
 $site | Set-Content (Join-Path $bundleRoot 'Config\site.conf') -Encoding UTF8
 
 @"
@@ -88,13 +153,15 @@ TARGET_DISK_FILTER_VALUE=$mckayDiskSerial
 
 $privateTemplate = Get-Content (Join-Path $repoRoot 'config\private-info.example.ini') -Raw
 $private = $privateTemplate `
-    -replace 'http://ENTER_HA_IP:8123', "http://${haIp}:8123" `
-    -replace 'carter_ip = ENTER_HERE', "carter_ip = $carterIp" `
-    -replace 'mckay_ip = ENTER_HERE', "mckay_ip = $mckayIp" `
-    -replace 'home_assistant_ip = ENTER_HERE', "home_assistant_ip = $haIp" `
-    -replace 'pbx_ip = ENTER_HERE', "pbx_ip = $pbxIp" `
-    -replace 'carter_disk_serial = ENTER_HERE', "carter_disk_serial = $carterDiskSerial" `
-    -replace 'mckay_disk_serial = ENTER_HERE', "mckay_disk_serial = $mckayDiskSerial"
+    -replace '(?m)^local_url\s*=.*$', "local_url = http://${haIp}:8123" `
+    -replace '(?m)^carter_ip\s*=.*$', "carter_ip = $carterIp" `
+    -replace '(?m)^mckay_ip\s*=.*$', "mckay_ip = $mckayIp" `
+    -replace '(?m)^carter_disk_serial\s*=.*$', "carter_disk_serial = $carterDiskSerial" `
+    -replace '(?m)^mckay_disk_serial\s*=.*$', "mckay_disk_serial = $mckayDiskSerial" `
+    -replace '(?m)^carter_host_ip\s*=.*$', "carter_host_ip = $carterIp" `
+    -replace '(?m)^mckay_host_ip\s*=.*$', "mckay_host_ip = $mckayIp" `
+    -replace '(?m)^home_assistant_ip\s*=.*$', "home_assistant_ip = $haIp" `
+    -replace '(?m)^pbx_ip\s*=.*$', "pbx_ip = $pbxIp"
 $private | Set-Content (Join-Path $bundleRoot 'Private\FILL-IN-PRIVATE-INFO.ini') -Encoding UTF8
 
 $windowsIso = Copy-OptionalFile 'Windows 11 ISO path' (Join-Path $bundleRoot 'Media\Windows')
@@ -106,6 +173,9 @@ $pbxExport = Copy-OptionalFolder 'MG PBX export/project folder path' (Join-Path 
 CARTER / McKAY PRIVATE BUNDLE CONTENTS
 ======================================
 Created: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+LAN: $lanCidr
+Gateway/DNS: $gatewayIp / $dnsIp
+Safe reservation range: $reservationFirst through $reservationLast
 CARTER host: $carterIp
 McKAY host: $mckayIp
 Home Assistant service: $haIp
@@ -116,7 +186,7 @@ Home Assistant backup: $haBackup
 PBX export: $pbxExport
 MG PBX theme: MG-PBX-Atlantis-Theme\Install-Atlantis-Theme.bat
 
-Open Docs\WALKTHROUGH.md and complete the phases in order.
+Open Docs\USB-SETUP-FROM-SCRATCH.md first, then Docs\WALKTHROUGH.md.
 Keep this entire bundle private.
 "@ | Set-Content (Join-Path $bundleRoot 'START-HERE.txt') -Encoding UTF8
 
