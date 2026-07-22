@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <children>
+        <Rectangle width="1920" height="1080" color="0x03181DFF" />
+
+        <Rectangle translation="[48,42]" width="1824" height="88" color="0x0B3D46FF" />
+        <Label translation="[76,58]" width="1768" height="58" text="ATLANTIS INFORMATION SCREEN" horizAlign="center" vertAlign="center" color="0x8FF7F0FF" />
+
+        <Rectangle translation="[48,156]" width="730" height="704" color="0x082A31FF" />
+        <Label translation="[78,188]" width="670" height="54" text="WEEKLY AGENDA" horizAlign="center" color="0x8FF7F0FF" />
+        <Label translation="[92,270]" width="640" height="520" wrap="true" text="Home Assistant agenda, alerts, and household information will appear here when the dashboard bridge is connected." color="0xD6FFFFFE" />
+
+        <Rectangle translation="[806,156]" width="1066" height="704" color="0x082A31FF" />
+        <Video id="video" translation="[830,180]" width="1018" height="572" enableUI="false" loop="true" contentIsPlaylist="true" focusable="true" />
+        <Label id="videoStatus" translation="[830,770]" width="1018" height="54" text="Loading video rotation..." horizAlign="center" color="0x8FF7F0FF" />
+
+        <Rectangle translation="[48,888]" width="1824" height="132" color="0x0B3D46FF" />
+        <Label translation="[76,920]" width="1768" height="68" text="OK: Pause/Play    RIGHT: Next Video    *: Reload Videos" horizAlign="center" vertAlign="center" color="0xD6FFFFFE" />
+    </children>
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+</component>
