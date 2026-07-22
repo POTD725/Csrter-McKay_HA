@@ -1,5 +1,32 @@
 # Change and Fix Ledger
 
+## 2026-07-22 eero network correction and USB restart path
+
+### Corrected network source of truth
+
+- Retired every `192.168.12.x` assumption from the maintained configuration and walkthrough.
+- Recorded the active eero LAN as `192.168.4.0/22`.
+- Recorded eero gateway and DNS as `192.168.4.1`.
+- Recorded the safe reservation range as `192.168.4.2` through `192.168.6.222`.
+- Recorded CARTER Proxmox at `192.168.4.121` and marked its eero reservation as required.
+- Added a dedicated network plan explaining that Proxmox, Home Assistant, and MG PBX require different addresses.
+- Left McKAY, Home Assistant, and PBX addresses unassigned until their MAC addresses and live leases are verified.
+
+### Safer private deployment builder
+
+- Added confirmed eero defaults so the same network values do not need to be retyped.
+- Added IPv4 validation.
+- Added safe-range validation.
+- Added duplicate-address rejection for CARTER, McKAY, Home Assistant, and MG PBX.
+- Replaced exact placeholder-only substitutions with anchored configuration-line replacements.
+
+### Start-from-scratch USB path
+
+- Added `docs/USB-SETUP-FROM-SCRATCH.md`.
+- Added `START-USB-SETUP.cmd` for one-click access to the USB guide on Windows.
+- Reordered the main walkthrough so backups and USB preparation happen before any reinstall.
+- Added Ventoy folder layout, installer-media placement, network settings, stop points, and first-boot checks.
+
 ## 2026-07-22 initial source import
 
 ### Consolidated deployment structure
