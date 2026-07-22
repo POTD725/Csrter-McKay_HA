@@ -1,6 +1,6 @@
 # Atlantis Installation USB: Start From Scratch
 
-This guide prepares one reusable USB drive for rebuilding CARTER and later McKAY. It keeps the installer media, drivers, backups, repository, and private worksheet together without placing secrets in GitHub.
+This guide prepares one reusable USB drive for rebuilding CARTER and later McKAY. It keeps installer media, drivers, backups, the repository, and the private worksheet together without placing secrets in GitHub.
 
 ## What the USB is for
 
@@ -76,9 +76,32 @@ Avoid third-party ISO mirrors. Keep the original filenames because they make lat
 
 Do not format the Ventoy data partition when Windows asks unless Ventoy installation failed and you are intentionally starting over.
 
-## Phase 4: Create the Atlantis USB folders
+## Phase 4: Prepare the USB contents
 
-On the large Ventoy data partition, create:
+### Recommended one-click helper
+
+From the updated repository on Windows, double-click:
+
+```text
+PREPARE-USB-CONTENTS.cmd
+```
+
+The helper:
+
+- asks for the USB drive letter;
+- shows its volume label, capacity, and free space;
+- requires a drive-specific confirmation such as `PREPARE-E`;
+- creates the Atlantis folder structure;
+- copies the repository and guides;
+- asks for each ISO, backup, and PBX folder;
+- generates SHA-256 checksums;
+- does not format the USB or install Ventoy.
+
+The helper may replace files with the same names, but it does not intentionally erase unrelated files.
+
+### Manual folder method
+
+When preparing the contents manually, create these folders on the large Ventoy data partition:
 
 ```text
 \ATLANTIS
@@ -86,14 +109,12 @@ On the large Ventoy data partition, create:
 \ATLANTIS\Backups\PBX
 \ATLANTIS\Config
 \ATLANTIS\Docs
-\ATLANTIS\Repository
+\ATLANTIS\Repository\Carter-McKay_HA
 \ATLANTIS\Checksums
 \ISO\Proxmox
 \ISO\Windows
 \ISO\VirtIO
 ```
-
-## Phase 5: Copy the files
 
 Copy the files into these locations:
 
@@ -114,7 +135,7 @@ Copy `config\private-info.example.ini` to:
 
 Fill in only non-secret values at first. Keep passwords, product keys, SIP credentials, and the Home Assistant emergency key off the unencrypted USB.
 
-## Phase 6: Record the known network values
+## Phase 5: Record the known network values
 
 In the USB's private worksheet, record:
 
@@ -128,7 +149,7 @@ CARTER Proxmox: 192.168.4.121
 
 Leave McKAY, Home Assistant, and MG PBX addresses blank until each device is discovered and separately reserved. The Proxmox host and its VMs cannot share an address.
 
-## Phase 7: Verify the USB before rebooting CARTER
+## Phase 6: Verify the USB before rebooting CARTER
 
 Confirm the USB contains all of these:
 
@@ -142,7 +163,13 @@ Confirm the USB contains all of these:
 
 Open the Home Assistant backup folder and verify the `.tar` file has a nonzero size. Do not rely only on the filename.
 
-## Phase 8: Boot CARTER from the USB
+The helper-generated checksum file is located at:
+
+```text
+\ATLANTIS\Checksums\SHA256SUMS.txt
+```
+
+## Phase 7: Boot CARTER from the USB
 
 1. Shut CARTER down cleanly.
 2. Insert the Atlantis USB.
@@ -153,7 +180,7 @@ Open the Home Assistant backup folder and verify the `.tar` file has a nonzero s
 
 Do not select the internal disk until its model and capacity match the recorded CARTER target disk. The Proxmox installation erases the selected target disk.
 
-## Phase 9: Network settings during Proxmox installation
+## Phase 8: Network settings during Proxmox installation
 
 Use the eero network, not the retired upstream network:
 
@@ -166,7 +193,7 @@ DNS: 192.168.4.1
 
 Use `carter` plus a local domain only if the installer requires a fully qualified hostname. Do not enter `192.168.12.20`, `192.168.12.21`, or `192.168.12.201`.
 
-## Phase 10: First boot verification
+## Phase 9: First boot verification
 
 After installation:
 
