@@ -1,0 +1,25 @@
+# Proxmox host packages used by the CARTER / McKAY platform
+# Core Proxmox packages are supplied by the official Proxmox VE installer.
+
+# Host maintenance and transfer
+curl
+ca-certificates
+jq
+openssh-client
+rsync
+zip
+unzip
+
+# Lightweight laptop information display
+xserver-xorg
+xinit
+openbox
+lightdm
+chromium
+unclutter
+x11-xserver-utils
+
+# Optional diagnostics
+smartmontools
+ethtool
+lm-sensors
