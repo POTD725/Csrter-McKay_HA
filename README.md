@@ -25,12 +25,31 @@ The active home network is the eero LAN, not the retired upstream `192.168.12.x`
 
 CARTER's `192.168.4.121` address is currently the known address and must be reserved in eero before it is treated as permanent. Home Assistant and MG PBX require their own separate addresses. See `docs/NETWORK-PLAN.md`.
 
+## Update the existing CARTER checkout
+
+On CARTER, update the repository and safely repair the untracked local `site.conf` file:
+
+```bash
+cd /root/Carter-McKay_HA
+git pull origin main
+chmod +x scripts/Update-Local-Network-Config.sh
+./scripts/Update-Local-Network-Config.sh
+```
+
+The updater creates a timestamped backup before changing `config/site.conf`. It preserves valid new VM addresses, but clears retired `192.168.12.x` values and prevents a VM from reusing CARTER's `192.168.4.121` address.
+
 ## Start here
 
 For a complete rebuild, begin with:
 
 ```text
 docs\USB-SETUP-FROM-SCRATCH.md
+```
+
+On Windows, double-click:
+
+```text
+START-USB-SETUP.cmd
 ```
 
 Then:
@@ -79,6 +98,7 @@ The repository stores scripts, templates, themes, and documentation. Licensed op
 The maintained repository provides:
 
 - corrected eero network templates and validation
+- a safe updater for the local untracked `site.conf`
 - a start-from-scratch USB preparation guide
 - a current network plan
 - Proxmox laptop kiosk patch and rollback scripts
