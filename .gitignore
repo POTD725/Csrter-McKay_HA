@@ -1,0 +1,52 @@
+# Licensed operating-system and driver media
+*.iso
+*.img
+*.qcow2
+*.vmdk
+*.vhd
+*.vhdx
+Media/Windows/
+Media/VirtIO/
+
+# Home Assistant and PBX migration data
+Migration-Data/
+Private/
+Secrets/
+Backups/
+PBX-Export/
+*.tar
+*.tar.gz
+*.tgz
+*.bak
+
+# Generated deployment bundles and logs
+output/
+build/
+*.7z
+*.zip
+*.log
+SHA256SUMS.txt
+
+# Filled configuration files
+config/site.conf
+config/private-info.ini
+config/*.private.*
+*.secrets.*
+
+# Keys and certificates
+*.key
+*.pem
+*.pfx
+*.p12
+*.crt
+*.cer
+*.csr
+id_rsa*
+id_ed25519*
+
+# Windows and editor clutter
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
