@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MG PBX Atlantis Theme Preview</title>
+  <link rel="stylesheet" href="theme/atlantis-theme.css">
+  <script defer src="theme/atlantis-theme.js"></script>
+  <style>
+    .preview-layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      min-height: calc(100vh - 78px);
+    }
+    .preview-nav {
+      padding: 18px 12px;
+      border-right: 1px solid rgba(102, 246, 255, 0.25);
+    }
+    .preview-nav a {
+      display: block;
+      margin: 5px 0;
+      padding: 11px 12px;
+      text-decoration: none;
+    }
+    .preview-main {
+      padding: 22px;
+    }
+    .hero {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      max-width: 740px;
+      color: #83aeb8;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .metric {
+      padding: 18px;
+    }
+    .metric-value {
+      margin-top: 8px;
+      color: #66f6ff;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.6fr);
+      gap: 16px;
+    }
+    .panel {
+      padding: 16px;
+    }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin: 14px 0;
+    }
+    .button-row button {
+      padding: 9px 13px;
+    }
+    .log {
+      min-height: 188px;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 900px) {
+      .preview-layout { grid-template-columns: 1fr; }
+      .preview-nav { display: none; }
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .content-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .preview-main { padding: 13px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .hero { align-items: start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-layout">
+    <nav class="preview-nav sidebar" aria-label="Preview navigation">
+      <h3>Control Channels</h3>
+      <a class="active" href="#">Overview</a>
+      <a href="#extensions">Extensions</a>
+      <a href="#operator">Virtual Operator</a>
+      <a href="#trunks">SIP Trunks</a>
+      <a href="#recordings">Recordings</a>
+      <a href="#maintenance">Maintenance</a>
+    </nav>
+
+    <main class="preview-main">
+      <section class="hero">
+        <div>
+          <div class="atl-kicker">Demonstration interface</div>
+          <h1>Communications Overview</h1>
+          <p>This preview contains demonstration data only. The production theme changes presentation, not PBX routing, credentials, extensions, recordings, or firewall settings.</p>
+        </div>
+        <span class="badge registered">Local interface ready</span>
+      </section>
+
+      <section class="metric-grid" aria-label="System metrics">
+        <article class="card metric">
+          <div class="atl-kicker">Registered</div>
+          <div class="metric-value">8 / 10</div>
+          <div class="status online">Endpoints available</div>
+        </article>
+        <article class="card metric">
+          <div class="atl-kicker">Active calls</div>
+          <div class="metric-value">02</div>
+          <div class="status ringing">One inbound</div>
+        </article>
+        <article class="card metric">
+          <div class="atl-kicker">Voicemail</div>
+          <div class="metric-value">04</div>
+          <div class="status">New messages</div>
+        </article>
+        <article class="card metric">
+          <div class="atl-kicker">Primary node</div>
+          <div class="metric-value">CARTER</div>
+          <div class="status healthy">Interface active</div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel">
+          <div class="card-header"><h2 id="extensions">Extension Roster</h2></div>
+          <div class="button-row">
+            <button type="button">Add extension</button>
+            <button type="button">Refresh status</button>
+            <button type="button">Export roster</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Extension</th><th>Station</th><th>Endpoint</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1001</td><td>Main Office</td><td>DP720</td><td><span class="badge registered">Registered</span></td></tr>
+              <tr><td>1002</td><td>Louie</td><td>Wave</td><td><span class="badge registered">Registered</span></td></tr>
+              <tr><td>1003</td><td>Debra Williams</td><td>DP720</td><td><span class="badge pending">Connecting</span></td></tr>
+              <tr><td>1004</td><td>Operator fallback</td><td>Wave</td><td><span class="badge registered">Registered</span></td></tr>
+              <tr><td>1008</td><td>Clergy Office</td><td>Desk phone</td><td><span class="badge offline">Offline</span></td></tr>
+            </tbody>
+          </table>
+        </article>
+
+        <aside class="panel">
+          <div class="card-header"><h2 id="operator">Operator Matrix</h2></div>
+          <p><strong>Business route:</strong> Main menu</p>
+          <p><strong>After-hours route:</strong> Voicemail and emergency transfer</p>
+          <label for="mode">Current demonstration mode</label>
+          <select id="mode" class="form-control">
+            <option>Business hours</option>
+            <option>After hours</option>
+            <option>Emergency routing</option>
+          </select>
+          <div class="button-row">
+            <button type="button">Apply route</button>
+            <button type="button" class="btn-danger">Disable trunk</button>
+          </div>
+          <div class="alert alert-warning">Preview warning: this button does not perform any PBX action.</div>
+          <h3>Activity stream</h3>
+          <pre class="log">11:42:04  Local interface initialized
+11:42:05  Extension status panel refreshed
+11:42:07  Operator route loaded
+11:42:09  Backup service standing by
+11:42:12  No credentials exposed in preview</pre>
+        </aside>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
