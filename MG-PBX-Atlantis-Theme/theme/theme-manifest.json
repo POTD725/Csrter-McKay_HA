@@ -1,0 +1,19 @@
+{
+  "name": "MG PBX Atlantis Command Interface",
+  "version": "1.0.0",
+  "type": "static-dashboard-theme",
+  "entrypoints": {
+    "stylesheet": "atlantis-theme.css",
+    "script": "atlantis-theme.js",
+    "emblem": "mg-pbx-atlantis.svg"
+  },
+  "target": {
+    "platform": "Windows 11 MG PBX virtual machine",
+    "preferred_root": "C:\\Atlantis\\PBX",
+    "required_file": "index.html"
+  },
+  "network_changes": false,
+  "telephony_changes": false,
+  "contains_credentials": false,
+  "contains_copyrighted_show_assets": false
+}
