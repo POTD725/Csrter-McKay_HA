@@ -1,28 +1,65 @@
 # CARTER / McKAY Installation Walkthrough
 
-This guide covers two paths:
-
-1. **Patch the current CARTER laptop** so its built-in screen displays the Atlantis information dashboard instead of the text prompt.
-2. **Build the private completion bundle** containing your Windows 11 ISO, VirtIO drivers, Home Assistant backup, PBX export, configuration, scripts, and checksums.
+This is the end-to-end build order for the CARTER primary and McKAY standby platform. For a rebuild, follow the parts in order and do not jump ahead to the kiosk or PBX theme.
 
 The public repository contains no passwords, encryption keys, product keys, backups, or licensed ISO files.
 
+## Confirmed network baseline
+
+| Item | Value |
+|---|---:|
+| eero LAN | `192.168.4.0/22` |
+| eero gateway | `192.168.4.1` |
+| DNS | `192.168.4.1` |
+| Safe reservation range | `192.168.4.2` through `192.168.6.222` |
+| CARTER Proxmox | `192.168.4.121` |
+| CARTER web interface | `https://192.168.4.121:8006` |
+
+The old `192.168.12.x` network is retired. Do not use `.12.20`, `.12.21`, `.12.201`, or `.12.1` anywhere in the new deployment.
+
+CARTER Proxmox, Home Assistant, and MG PBX are separate systems and must have separate addresses. Home Assistant and PBX addresses remain unknown until they are discovered and reserved.
+
 ## Before making changes
 
-- Confirm CARTER Home Assistant and the PBX VM are backed up.
-- Confirm you can sign into the Proxmox web interface from another computer.
-- Record the exact current IP addresses for CARTER, McKAY, Home Assistant, and the PBX.
-- Open the router or eero reservation page and record the permitted reservation range.
-- Record each target disk serial. Do not rely only on names such as `sda` or `nvme0n1`.
+- Create and download a fresh full Home Assistant backup.
 - Keep the Home Assistant emergency backup key offline.
+- Export or copy the current MG PBX project when one exists.
+- Confirm you can open Proxmox at `https://192.168.4.121:8006`.
+- Verify CARTER's Ethernet MAC in the eero app and reserve `192.168.4.121` for it.
+- Record the exact CARTER and McKAY target disk serials.
+- Do not rely only on disk names such as `sda` or `nvme0n1`.
 - Keep all Windows and provider credentials out of the public repository.
 
-## Part A: Download and prepare the repository
+## Part 0: Prepare the installation USB
 
-1. Open the repository on GitHub.
-2. Choose **Code > Download ZIP**, or clone it with Git.
-3. Extract it to a private working folder on Windows.
-4. Copy:
+Follow:
+
+```text
+docs\USB-SETUP-FROM-SCRATCH.md
+```
+
+The USB should contain:
+
+- current Proxmox VE ISO;
+- legitimate Windows 11 ISO;
+- current VirtIO ISO;
+- latest Home Assistant full backup `.tar`;
+- repository or private deployment bundle;
+- PBX export when available;
+- private worksheet without unencrypted secrets.
+
+Do not reinstall CARTER until the Home Assistant backup is confirmed on another device and on the USB.
+
+## Part A: Prepare the repository and private configuration
+
+1. Open the repository on the Windows preparation computer.
+2. Choose **Code > Download ZIP**, or update the Git clone:
+
+   ```powershell
+   git pull
+   ```
+
+3. Copy:
 
    ```text
    config\site.example.conf
@@ -34,81 +71,112 @@ The public repository contains no passwords, encryption keys, product keys, back
    config\site.conf
    ```
 
-5. Open `config\site.conf` in Notepad and replace every `ENTER_HERE` value.
-6. Copy `config\private-info.example.ini` to a private location outside the repository.
-7. Fill private values only as each later step requires them.
-
-## Part B: Patch the current CARTER laptop display
-
-This patch installs a very small graphical environment directly on the Proxmox host. It does not edit VM 100 or VM 110.
-
-1. Make sure SSH is enabled on CARTER and that you know the Proxmox root password.
-2. Confirm `ATLANTIS_KIOSK_URL` in `config\site.conf` opens the desired Home Assistant dashboard.
-3. Double-click:
+4. Confirm these known values are present:
 
    ```text
-   RUN-CURRENT-CARTER-PATCH.cmd
+   LAN_CIDR=192.168.4.0/22
+   GATEWAY_IP=192.168.4.1
+   DNS_IP=192.168.4.1
+   ROUTER_RESERVATION_FIRST=192.168.4.2
+   ROUTER_RESERVATION_LAST=192.168.6.222
+   CARTER_HOST_IP=192.168.4.121
+   PROXMOX_PREFIX=22
    ```
 
-4. Review the displayed CARTER address and dashboard URL.
-5. Type `APPLY` when asked.
-6. Enter the CARTER root password when SSH requests it.
-7. When the script finishes, reboot CARTER from the Proxmox web interface.
-8. The laptop screen should load the Atlantis information display.
+5. Leave McKAY, Home Assistant, and PBX addresses as `ENTER_HERE` until each address is verified.
+6. Copy `config\private-info.example.ini` outside the public repository.
+7. Fill private values only as each later step requires them.
 
-### Maintenance access
+## Part B: Install or rebuild CARTER Proxmox
 
-Press:
+1. Shut CARTER down cleanly.
+2. Insert the prepared Atlantis USB.
+3. Boot the USB in UEFI mode.
+4. Select the Proxmox ISO in Ventoy.
+5. Verify the internal target disk by model, capacity, and recorded serial.
+6. Install Proxmox using:
 
-```text
-Ctrl + Alt + F2
-```
+   ```text
+   Hostname: carter
+   Address: 192.168.4.121/22
+   Gateway: 192.168.4.1
+   DNS: 192.168.4.1
+   ```
 
-to open a text console.
+7. Remove the USB when CARTER reboots.
+8. Connect CARTER by Ethernet to the eero-side network.
+9. Open:
 
-### Roll back the display patch
+   ```text
+   https://192.168.4.121:8006
+   ```
 
-From the CARTER console or an SSH session, run:
+10. Sign in as `root`.
+11. Update Proxmox before creating or restoring VMs.
+12. Confirm at the CARTER console:
+
+   ```bash
+   ip -4 address show vmbr0
+   ip route
+   ```
+
+The default route must point to `192.168.4.1`. Stop if CARTER receives a `192.168.12.x` address.
+
+## Part C: Restore Home Assistant as VM 100
+
+1. Create or import the Home Assistant OS VM as VM ID `100`.
+2. Attach its network adapter to `vmbr0`.
+3. Start VM `100`.
+4. Open the Home Assistant welcome page using the address shown in the eero app.
+5. Choose **Upload backup**.
+6. Select the newest full backup from the USB or private bundle.
+7. Enter the emergency backup key only when Home Assistant asks for it.
+8. Restore the full backup.
+9. Verify integrations, add-ons, dashboards, automations, cameras, and voice devices.
+10. Do not assign `192.168.4.121` to Home Assistant. That address belongs to the Proxmox host.
+
+## Part D: Discover and reserve the service addresses
+
+Create four separate eero reservations:
+
+1. CARTER Proxmox host
+2. McKAY Proxmox host
+3. Shared Home Assistant service address
+4. Shared MG PBX service address
+
+To inspect VMs on CARTER:
 
 ```bash
-/opt/atlantis/bin/rollback-proxmox-kiosk.sh
-reboot
+qm list
 ```
 
-The rollback restores the normal text-console boot target. It leaves the installed display packages in place to avoid removing anything another package may use.
+For guest-agent-aware VMs, try:
 
-## Part C: Build the private one-file completion bundle
+```bash
+qm guest cmd 100 network-get-interfaces
+qm guest cmd 110 network-get-interfaces
+```
 
-1. Gather these items on the Windows preparation computer:
-   - legitimate Windows 11 Pro or Enterprise ISO;
-   - current VirtIO driver ISO;
-   - newest full Home Assistant backup `.tar` file;
-   - Home Assistant emergency backup key;
-   - current MG PBX project or export folder;
-   - CARTER and McKAY target disk serials;
-   - router reservation range and selected addresses.
-2. Open PowerShell in the repository folder.
-3. Run:
+When Home Assistant does not report through the guest agent:
 
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-Private-Deployment.ps1
-   ```
+1. Open the eero app.
+2. Open **Devices**.
+3. Find the Home Assistant or newly connected wired device.
+4. Compare its MAC with the VM network MAC shown in Proxmox.
+5. Reserve the verified address.
 
-4. Enter the requested network and disk information.
-5. Select each ISO, backup, and PBX folder when prompted. Blank entries may be supplied later.
-6. The builder creates:
-   - a private staging folder;
-   - populated `site.conf` and McKAY disk override;
-   - a private fill-in worksheet;
-   - scripts and documentation;
-   - SHA-256 checksums;
-   - one encrypted-header `.7z` bundle when 7-Zip is available.
-7. Store the resulting bundle on an encrypted USB drive or another private location.
-8. Never upload the generated bundle to this public repository.
+Repeat for MG PBX. Then enter those verified values into `config\site.conf` and the private worksheet.
 
-## Part D: Create and install the Windows 11 PBX VM
+Every selected address must be:
 
-The existing design uses VM ID `110` for Windows 11 MG PBX.
+- within `192.168.4.2` through `192.168.6.222`;
+- unused by another device;
+- different from `192.168.4.121`;
+- different from every other reserved host or VM address.
+
+## Part E: Create and install Windows 11 MG PBX as VM 110
+
+The design uses VM ID `110`.
 
 Recommended starting resources:
 
@@ -122,79 +190,131 @@ Recommended starting resources:
 
 Installation order:
 
-1. Attach the Windows 11 ISO and VirtIO ISO to VM 110.
+1. Attach the Windows 11 ISO and VirtIO ISO to VM `110`.
 2. Start the VM and begin Windows installation.
 3. When no disk appears, choose **Load driver** and load the VirtIO storage driver.
 4. Complete Windows 11 installation.
-5. Install the VirtIO guest tools from the driver ISO.
+5. Install VirtIO guest tools from the driver ISO.
 6. Run Windows Update until no important updates remain.
-7. Copy the repository or the private bundle into the VM.
-8. Open an elevated PowerShell window.
-9. Run:
+7. Reserve the verified PBX VM address in eero.
+8. Copy the repository or private bundle into the VM.
+9. Open an elevated PowerShell window.
+10. Run:
 
    ```powershell
    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Prepare-Windows-PBX.ps1 -PbxSource "PATH_TO_YOUR_PBX_EXPORT"
    ```
 
-10. The script installs or updates the required application set, enables local maintenance access, creates the PBX folders, and registers the automatic-start task.
-11. Verify that one of these startup files exists in `C:\Atlantis\PBX`:
-    - `start-pbx.ps1`
-    - `start-pbx.cmd`
-    - `start-pbx.bat`
-    - `server.js`
-    - `app.py`
-    - `main.py`
-    - `package.json` with a working `npm start` script
+11. Verify one of these startup files exists in `C:\Atlantis\PBX`:
+
+   - `start-pbx.ps1`
+   - `start-pbx.cmd`
+   - `start-pbx.bat`
+   - `server.js`
+   - `app.py`
+   - `main.py`
+   - `package.json` with a working `npm start` script
+
 12. Restart Windows and confirm the PBX starts automatically.
 13. Run:
 
-    ```text
-    C:\Atlantis\PBX-STATUS.cmd
-    ```
+   ```text
+   C:\Atlantis\PBX-STATUS.cmd
+   ```
 
-    to inspect startup, SSH, and listening ports.
+## Part F: Build the private one-file completion bundle
 
-## Part E: Restore Home Assistant
+After all four addresses are verified and reserved:
 
-1. Start VM 100 on CARTER.
-2. Open the Home Assistant welcome page.
-3. Choose **Upload backup**.
-4. Select the full backup from the private bundle.
-5. Enter the emergency backup key only when Home Assistant asks for it.
-6. Restore the full backup.
-7. Verify integrations, add-ons, dashboards, automations, cameras, and voice devices.
-8. Confirm the Atlantis dashboard URL in `site.conf` is correct.
-9. Restart the CARTER kiosk after the dashboard works.
+1. Open PowerShell in the repository folder.
+2. Run:
 
-## Part F: Network reservations
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-Private-Deployment.ps1
+   ```
 
-Create four router reservations:
+3. Accept the confirmed defaults when they still match:
 
-1. CARTER Proxmox host
-2. McKAY Proxmox host
-3. Shared Home Assistant service address
-4. Shared MG PBX service address
+   ```text
+   LAN: 192.168.4.0/22
+   Gateway: 192.168.4.1
+   DNS: 192.168.4.1
+   Reservation first: 192.168.4.2
+   Reservation last: 192.168.6.222
+   CARTER: 192.168.4.121
+   ```
 
-McKAY standby VMs must remain stopped during normal CARTER operation. They reuse the shared VM addresses only during failover.
+4. Enter the verified McKAY, Home Assistant, and PBX addresses.
+5. Enter both target disk serials.
+6. Select the ISOs, backup, and PBX folder when prompted. Blank entries may be supplied later.
+7. Store the generated bundle on an encrypted USB drive or another private location.
+8. Never upload the generated bundle to this public repository.
 
-Never choose an address merely because it looks convenient. It must fall inside the router's permitted reservation block and must not already be assigned.
+The builder rejects duplicate service addresses and addresses outside the safe eero range.
 
-## Part G: Final verification checklist
+## Part G: Patch the CARTER laptop display
+
+Do this only after Home Assistant and the PBX VM are stable.
+
+1. Confirm `ATLANTIS_KIOSK_URL` in `config\site.conf` opens the desired dashboard.
+2. Double-click:
+
+   ```text
+   RUN-CURRENT-CARTER-PATCH.cmd
+   ```
+
+3. Review the displayed CARTER address and dashboard URL.
+4. Type `APPLY` when asked.
+5. Enter the CARTER root password when SSH requests it.
+6. Reboot CARTER from the Proxmox web interface.
+7. The laptop screen should load the Atlantis information display.
+
+### Maintenance access
+
+Press:
+
+```text
+Ctrl + Alt + F2
+```
+
+to open a text console.
+
+### Roll back the display patch
+
+```bash
+/opt/atlantis/bin/rollback-proxmox-kiosk.sh
+reboot
+```
+
+The rollback restores the normal text-console boot target and leaves installed display packages in place.
+
+## Part H: Prepare McKAY standby
+
+1. Install Proxmox on McKAY using its own verified reservation.
+2. Do not give McKAY the CARTER host address.
+3. Keep standby Home Assistant and PBX VMs stopped during normal CARTER operation.
+4. Copy recent backups to McKAY.
+5. Document a controlled failover procedure.
+6. Only during failover may the standby service VMs reuse the shared Home Assistant and PBX addresses.
+
+## Final verification checklist
 
 ### CARTER
 
-- Proxmox web interface opens.
-- VM 100 starts automatically.
-- VM 110 starts automatically.
-- Laptop screen opens the Atlantis dashboard.
-- `Ctrl + Alt + F2` opens maintenance console.
+- Proxmox opens at `https://192.168.4.121:8006`.
+- Default route points to `192.168.4.1`.
+- VM `100` starts correctly.
+- VM `110` starts correctly.
+- Proxmox, Home Assistant, and PBX have different addresses.
+- Laptop kiosk is installed only after both VMs are stable.
 
 ### Home Assistant
 
-- Dashboard opens at the configured URL.
+- Full backup restored successfully.
+- Dashboard opens at the reserved HA address.
 - Calendar and weather load.
 - Automations do not run twice.
-- Backup encryption key is stored offline.
+- Backup emergency key is stored offline.
 
 ### MG PBX
 
@@ -207,16 +327,29 @@ Never choose an address merely because it looks convenient. It must fall inside 
 
 ### McKAY
 
-- Host is reachable.
+- Host is reachable at its own reservation.
 - Standby HA and PBX VMs remain stopped.
 - Recent backups are available.
-- A planned failover test has been documented.
+- A planned failover test is documented.
 
 ## Troubleshooting
 
-### CARTER still shows the text prompt
+### CARTER receives the wrong network
 
-Run on CARTER:
+Run:
+
+```bash
+ip -4 address show vmbr0
+ip route
+```
+
+CARTER must be on the eero-side `192.168.4.0/22` network. If it receives `192.168.12.x`, check the Ethernet path and confirm it connects to the eero LAN, not the upstream router LAN.
+
+### Home Assistant and Proxmox seem to have the same address
+
+They cannot share an address. `192.168.4.121` belongs to CARTER Proxmox. Use the eero device list and the VM MAC to discover the separate Home Assistant address.
+
+### CARTER still shows the text prompt after the kiosk patch
 
 ```bash
 systemctl status lightdm
@@ -228,19 +361,17 @@ The default target should be `graphical.target`.
 
 ### The kiosk says Home Assistant is initializing forever
 
-- Confirm VM 100 is running.
+- Confirm VM `100` is running.
 - Confirm the exact dashboard URL from another computer.
-- Confirm CARTER can reach the Home Assistant IP.
+- Confirm CARTER can reach the reserved Home Assistant IP.
 - Correct `ATLANTIS_KIOSK_URL` in `/opt/atlantis/config/site.conf`.
 - Restart LightDM:
 
-```bash
-systemctl restart lightdm
-```
+  ```bash
+  systemctl restart lightdm
+  ```
 
 ### Windows PBX does not start automatically
-
-Open an elevated PowerShell window and run:
 
 ```powershell
 Get-ScheduledTask -TaskName 'MG PBX Automatic Startup'
