@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">MG PBX Atlantis command emblem</title>
+  <desc id="desc">An original glowing geometric communications ring with the letters MG PBX.</desc>
+  <defs>
+    <radialGradient id="core" cx="50%" cy="44%" r="62%">
+      <stop offset="0" stop-color="#153b48"/>
+      <stop offset="0.7" stop-color="#07151e"/>
+      <stop offset="1" stop-color="#03090e"/>
+    </radialGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#baffff"/>
+      <stop offset="0.45" stop-color="#55eef5"/>
+      <stop offset="1" stop-color="#168ea2"/>
+    </linearGradient>
+    <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0d3a0"/>
+      <stop offset="0.5" stop-color="#c8a46a"/>
+      <stop offset="1" stop-color="#765632"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="128" cy="128" r="118" fill="url(#core)" stroke="#123542" stroke-width="4"/>
+  <circle cx="128" cy="128" r="101" fill="none" stroke="url(#bronze)" stroke-width="7" opacity="0.92"/>
+  <circle cx="128" cy="128" r="86" fill="none" stroke="url(#cyan)" stroke-width="3" filter="url(#glow)"/>
+  <circle cx="128" cy="128" r="70" fill="none" stroke="#45dce5" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.8"/>
+
+  <g fill="url(#bronze)" stroke="#07151e" stroke-width="2">
+    <path d="M122 3h12l6 24-12 12-12-12z"/>
+    <path d="M122 253h12l6-24-12-12-12 12z"/>
+    <path d="M3 122v12l24 6 12-12-12-12z"/>
+    <path d="M253 122v12l-24 6-12-12 12-12z"/>
+    <path d="M40 31l9-9 21 13v17H53z"/>
+    <path d="M216 225l-9 9-21-13v-17h17z"/>
+    <path d="M31 216l-9-9 13-21h17v17z"/>
+    <path d="M225 40l9 9-13 21h-17V53z"/>
+  </g>
+
+  <g fill="none" stroke="url(#cyan)" stroke-width="5" stroke-linecap="square" filter="url(#glow)">
+    <path d="M78 107V83h20l14 17 16-17h20v50"/>
+    <path d="M78 133v40h20v-36h14v36h20v-40"/>
+    <path d="M143 112h34l14 14-14 14h-34z"/>
+  </g>
+
+  <path d="M58 190h140" stroke="#4ce8ef" stroke-width="2" opacity="0.65"/>
+  <text x="128" y="211" text-anchor="middle" fill="#d7ffff" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="4">MG PBX</text>
+</svg>
