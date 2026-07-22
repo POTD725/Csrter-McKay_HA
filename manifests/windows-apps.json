@@ -1,0 +1,53 @@
+{
+  "purpose": "Applications required or commonly used by the Windows 11 MG PBX virtual machine",
+  "required": [
+    {
+      "name": "Python 3.11",
+      "winget_id": "Python.Python.3.11",
+      "reason": "Compatibility with the existing MG PBX Python project"
+    },
+    {
+      "name": "Node.js LTS",
+      "winget_id": "OpenJS.NodeJS.LTS",
+      "reason": "PBX web interface and supporting tools"
+    },
+    {
+      "name": "Git",
+      "winget_id": "Git.Git",
+      "reason": "Versioned deployment and updates"
+    },
+    {
+      "name": "7-Zip",
+      "winget_id": "7zip.7zip",
+      "reason": "Private deployment bundle extraction and creation"
+    },
+    {
+      "name": "Microsoft Visual C++ 2015-2022 Runtime x64",
+      "winget_id": "Microsoft.VCRedist.2015+.x64",
+      "reason": "Native runtime used by Python, Node, and PBX dependencies"
+    },
+    {
+      "name": "Microsoft Edge WebView2 Runtime",
+      "winget_id": "Microsoft.EdgeWebView2Runtime",
+      "reason": "Embedded PBX and Home Assistant interface support"
+    }
+  ],
+  "optional": [
+    {
+      "name": "Notepad++",
+      "winget_id": "Notepad++.Notepad++"
+    },
+    {
+      "name": "Visual Studio Code",
+      "winget_id": "Microsoft.VisualStudioCode"
+    }
+  ],
+  "windows_features": [
+    "Remote Desktop",
+    "OpenSSH Server",
+    "Windows Defender",
+    "Windows Update",
+    "PowerShell",
+    "Task Scheduler"
+  ]
+}
